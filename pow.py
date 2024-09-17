@@ -157,6 +157,41 @@ class NodeCLI(cmd.Cmd):
         except ValueError:
             print("Invalid input. Use format: addtx <recipient> <amount>")
 
+    class NodeCLI(cmd.Cmd):
+    prompt = 'blockchain> '
+
+    def __init__(self, node):
+        super().__init__()
+        self.node = node
+
+    def do_viewchain(self, arg):
+        """View the current state of the blockchain"""
+        for block in self.node.blockchain.chain:
+            print(f"Block {block.index}:")
+            print(f"  Timestamp: {block.timestamp}")
+            print(f"  Data: {block.data}")
+            print(f"  Hash: {block.hash}")
+            print(f"  Previous Hash: {block.previous_hash}")
+            print()
+
+    def do_addtx(self, arg):
+        """Add a new transaction: addtx <recipient> <amount>"""
+        try:
+            recipient, amount = arg.split()
+            amount = int(amount)
+            self.node.blockchain.add_transaction(self.node.address, recipient, amount)
+            self.node.broadcast({
+                'type': 'new_transaction',
+                'data': {
+                    'sender': self.node.address + self.node.port,
+                    'recipient': recipient,
+                    'amount': amount
+                }
+            })
+            print(f"Transaction added: {self.node.address} sends {amount} coins to {recipient}")
+        except ValueError:
+            print("Invalid input. Use format: addtx <recipient> <amount>")
+
     def _notify_peer_to_add_us(self, address, port):
         """Notify the peer to add this node as a peer"""
         try:
@@ -176,6 +211,59 @@ class NodeCLI(cmd.Cmd):
         except Exception as e:
             print(f"Error notifying peer {address}:{port}: {e}")
             return False
+
+    def do_mine(self, arg):
+        """Mine a new block"""
+        if self.node.is_miner:
+            print("Mining a new block...")
+            self.node.mine()
+            print("Block mined and added to the chain.")
+        else:
+            print("This node is not a miner.")
+
+    def do_addpeer(self, arg):
+        """Add a new peer: addpeer <address> <port>"""
+        try:
+            address, port = arg.split()
+            port = int(port)
+            if (address, port) in self.node.peers:
+                print("This peer is already connected.")
+                return
+            
+            if address == self.node.address and port == self.node.port:
+                print("Cannot connect to self.")
+                return
+            
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(1)
+                try:
+                    s.connect((address, port))
+                except Exception as e:
+                    print(f"Failed to connect to peer {address}:{port}: {e}")
+                    return
+            
+            if self._notify_peer_to_add_us(address, port):
+                self.node.add_peer(address, port)
+                print(f"Peer added: {address}:{port}")
+            else:
+                print(f"Failed to add peer: {address}:{port}")
+            
+        except ValueError:
+            print("Invalid input. Use format: addpeer <address> <port>")
+
+    def do_listpeers(self, arg):
+        """List all peers"""
+        if self.node.peers:
+            print("Connected peers:")
+            for peer in self.node.peers:
+                print(f"  - {peer[0]}:{peer[1]}")
+        else:
+            print("This node has no connected peers.")
+
+    def do_exit(self, arg):
+        """Exit the CLI"""
+        print("Exiting CLI...")
+        return True
 
     def do_mine(self, arg):
         """Mine a new block"""
