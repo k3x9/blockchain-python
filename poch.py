@@ -26,7 +26,7 @@ class Blockchain:
         self.chain = [self.create_genesis_block()]
         self.difficulty = difficulty
         self.pending_transactions = []
-        self.target = 2**256 - 1  # Initial target (easiest)
+        self.target = 2**128 - 1  # Initial target (easiest)
         self.c_val = self.calculate_hash(self.chain[-1].index, self.chain[-1].hash, 0)
 
     def create_genesis_block(self):
@@ -77,6 +77,8 @@ class Node:
     def handle_connection(self, conn, addr):
         with conn:
             data = conn.recv(1024)
+            print(data)
+            
             if data:
                 message = json.loads(data.decode())
                 if message['type'] == 'new_block':
@@ -98,12 +100,38 @@ class Node:
 
     def add_peer(self, address, port):
         self.peers.add((address, port))
+        
+    def broadcast_transaction(self, sender, recipient, amount):
+        # Broadcast the transaction to all peers
+        transaction_data = {
+            'type': 'new_transaction',
+            'data': {
+                'sender': sender,
+                'recipient': recipient,
+                'amount': amount
+            }
+        }
+        message = json.dumps(transaction_data).encode()
+        for peer in self.peers:
+            peer_address, peer_port = peer
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.connect((peer_address, peer_port))
+                    s.sendall(message)
+            except Exception as e:
+                print(f"Failed to broadcast to {peer_address}:{peer_port} - {str(e)}")
+
 
     @staticmethod
     def calculate_hash(*args):
         return hashlib.sha256(str(args).encode('utf-8')).hexdigest()
 
     def poch_consensus(self):
+        print("Starting PoCh consensus...")
+        
+        print(int(self.calculate_hash(self.blockchain.c_val + self.id), 16))
+        print(self.blockchain.target)
+        
         if int(self.calculate_hash(self.blockchain.c_val + self.id), 16) > self.blockchain.target:
             print("Starting PoCh consensus...")
             self.broadcast({'type': 'candidacy', 'id': self.id})
@@ -231,13 +259,30 @@ class Node:
         elif message['type'] == 'failed_consensus':
             self.blockchain.target = message['new_target']
             self.failed_consensus_received = True
+    
 
     def broadcast(self, message):
         """Broadcast a message to all peers"""
+        
+        print(message)
+        # try:
+        #     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        #         try:
+        #             s.connect((address, port))
+        #             s.sendall(json.dumps(message).encode())
+
+        #     print(f"Successfully notified peer {address}:{port} to add us as a peer.")
+        #     return True
+
+        # except Exception as e:
+        #     print(f"Error notifying peer {address}:{port}: {e}")
+        #     return False
+        
         for peer in self.peers:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
                 try:
-                    s.sendto(json.dumps(message).encode(), peer)
+                    s.connect((address, port))
+                    s.sendall(json.dumps(message).encode())
                 except Exception as e:
                     print(f"Failed to send to peer {peer}: {e}")
 
@@ -258,26 +303,32 @@ class NodeCLI(cmd.Cmd):
             print(f"  Previous Hash: {block.previous_hash}")
             print()
 
+    def do_listpendingtx(self, arg):
+        print(self.node.blockchain.pending_transactions)
+        
     def do_addtx(self, arg):
         """Add a new transaction: addtx <recipient> <amount>"""
         try:
             recipient, amount = arg.split()
             amount = int(amount)
             self.node.blockchain.add_transaction(self.node.address + ':' + str(self.node.port), recipient, amount)
-            self.node.broadcast({
-                'type': 'new_transaction',
-                'data': {
-                    'sender': self.node.address + ':' + str(self.node.port),
-                    'recipient': recipient,
-                    'amount': amount
-                }
-            })
+            self.node.broadcast_transaction(self.node.address + ':' + str(self.node.port), recipient, amount)
+            
+            # self.broadcast({
+            #     'type': 'new_transaction',
+            #     'data': {
+            #         'sender': self.node.address + ':' + str(self.node.port),
+            #         'recipient': recipient,
+            #         'amount': amount
+            #     }
+            # })
             print(f"Transaction added: {self.node.address}:{self.node.port} sends {amount} coins to {recipient}")
         except ValueError:
             print("Invalid input. Use format: addtx <recipient> <amount>")
 
     def do_consensus(self, arg):
         """Initiate the PoCh consensus algorithm"""
+        print("HERE")
         self.node.poch_consensus()
 
     def do_addpeer(self, arg):
@@ -309,6 +360,9 @@ class NodeCLI(cmd.Cmd):
             
         except ValueError:
             print("Invalid input. Use format: addpeer <address> <port>")
+            
+            
+
 
     def _notify_peer_to_add_us(self, address, port):
         """Notify the peer to add this node as a peer"""
@@ -322,6 +376,8 @@ class NodeCLI(cmd.Cmd):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.connect((address, port))
                 s.sendall(json.dumps(message).encode())
+                
+            s.close()
 
             print(f"Successfully notified peer {address}:{port} to add us as a peer.")
             return True
