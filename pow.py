@@ -157,41 +157,6 @@ class NodeCLI(cmd.Cmd):
         except ValueError:
             print("Invalid input. Use format: addtx <recipient> <amount>")
 
-    class NodeCLI(cmd.Cmd):
-    prompt = 'blockchain> '
-
-    def __init__(self, node):
-        super().__init__()
-        self.node = node
-
-    def do_viewchain(self, arg):
-        """View the current state of the blockchain"""
-        for block in self.node.blockchain.chain:
-            print(f"Block {block.index}:")
-            print(f"  Timestamp: {block.timestamp}")
-            print(f"  Data: {block.data}")
-            print(f"  Hash: {block.hash}")
-            print(f"  Previous Hash: {block.previous_hash}")
-            print()
-
-    def do_addtx(self, arg):
-        """Add a new transaction: addtx <recipient> <amount>"""
-        try:
-            recipient, amount = arg.split()
-            amount = int(amount)
-            self.node.blockchain.add_transaction(self.node.address, recipient, amount)
-            self.node.broadcast({
-                'type': 'new_transaction',
-                'data': {
-                    'sender': self.node.address + self.node.port,
-                    'recipient': recipient,
-                    'amount': amount
-                }
-            })
-            print(f"Transaction added: {self.node.address} sends {amount} coins to {recipient}")
-        except ValueError:
-            print("Invalid input. Use format: addtx <recipient> <amount>")
-
     def _notify_peer_to_add_us(self, address, port):
         """Notify the peer to add this node as a peer"""
         try:

@@ -1,4 +1,4 @@
-python poch.py 5000
+python poem_global.py 5000 false
 addpeer 127.0.0.1 5001
 addpeer 127.0.0.1 5002
 addtx 127.0.0.1:5001 10
