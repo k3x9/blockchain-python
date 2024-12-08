@@ -102,13 +102,13 @@ class Blockchain:
         # Use PoEM to select the block producer
         
         features = [poem_model.extract_features(node, self) for node in poem_model.nodes]
-        print(features)
+        # print(features)
         try:
             probabilities = poem_model.predict(features)
         except ValueError:
-            print("Error predicting probabilities")
+            # print("Error predicting probabilities")
             return None
-        print(probabilities)
+        # print(probabilities)
         selected_node_index = np.argmax(probabilities)
         selected_node = poem_model.nodes[selected_node_index]
 
@@ -162,6 +162,7 @@ class PoEMModel:
             # print("Model traineddddd")
             self.version += 1
             # print(f"Model trained. New version: {self.version}")
+        time.sleep(2)
 
     def predict(self, X):
         return self.model.predict_proba(X)[:, 1]
@@ -215,29 +216,38 @@ class Node:
         
         stakes = [self.ask_stake('127.0.0.1', port) for port in self.blockchain.validators]
         total_stake = sum(stakes)
-        weights = [stake/total_stake for stake in stakes]
+        weights = [stake/(total_stake + 0.000001) for stake in stakes]
         leader = random.choices(list(self.blockchain.validators), weights=weights)[0]
         return leader
 
     def ask_stake(self, address, port):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            try:
-                s.connect((address, port))
-                s.sendall(json.dumps({'type': 'get_stake'}).encode())
-                data = s.recv(4096)
-                if data:
-                    message = json.loads(data.decode())
-                    return message['stake']
-            except Exception as e:
-                print(f"Failed to get stake from {address}:{port}: {e}")
-                return 0
+            flag = True
+            cnt = 0
+            while flag:
+                try:
+                    s.connect((address, port))
+                    s.sendall(json.dumps({'type': 'get_stake'}).encode())
+                    data = s.recv(4096)
+                    if data:
+                        message = json.loads(data.decode())
+
+                        return message['stake']
+                    flag = False
+                except Exception as e:
+                    return 0
+                    cnt += 1
+                    if cnt >= 7:
+                        time.sleep(0.5 + (cnt - 6)/2)
+                    else:
+                        time.sleep(0.5)
             
     def proof_of_work(self):
         block = Block(len(self.blockchain.chain), self.blockchain.get_latest_block().hash, int(time.time()), self.blockchain.pending_transactions, "", 0)
         nonce = 0
         while True:
             hash = self.calculate_hash(block.index, block.previous_hash, block.timestamp, block.data, nonce)
-            print(hash)
+            # print(hash)
             if hash.startswith('0' * self.difficulty):
                 return (nonce, block)
             nonce += 1
@@ -256,7 +266,7 @@ class Node:
                     executor.submit(self.handle_connection, conn, addr)
         
     def stop(self):
-        print("Stopping node...")
+        # print("Stopping node...")
         self._is_running = False
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as dummy_sock:
             dummy_sock.connect((self.address, self.port))
@@ -303,7 +313,7 @@ class Node:
                         if is_validator:
                             self.add_node((peer_address, peer_port))
                         self.add_peer(peer_address, peer_port)
-                        print(f"Added peer: {peer_address}:{peer_port}")
+                        # print(f"Added peer: {peer_address}:{peer_port}")
                         response = {
                             'is_validator': self.is_validator,
                             'nodes': self.nodes
@@ -446,7 +456,7 @@ class Node:
         if self.is_validator:
             # print("I am a validator")
             leader = message['leader']
-            if poem_model.version < 100:
+            if poem_model.version < 60:
                 if leader != self.port:
                     cpu_usage = psutil.cpu_percent()
                     per_core_usage = sum(psutil.cpu_percent(percpu=True))/psutil.cpu_count()
@@ -477,7 +487,7 @@ class Node:
                         'id': max_msg_id + 1
                     })
                 poem_model.version += 1
-                if poem_model.version == 100:
+                if poem_model.version == 60:
                     poem_model.train()
                     # print("PoEM model trained")
             else:
@@ -548,6 +558,10 @@ class NodeCLI(cmd.Cmd):
         self.node = node
         self.response = None
 
+    def do_count(self, arg):
+        """Count the number of blocks in the blockchain"""
+        return len(self.node.blockchain.chain)
+    
     def do_sval(self, arg):
         """Store the validators"""
         if len(self.node.messages_id) != 0:
@@ -615,8 +629,9 @@ class NodeCLI(cmd.Cmd):
                 'id': max_msg_id + 1
             })
             # print(f"Transaction added: {str(self.node.address) + str(self.node.port)} sends {amount} coins to {recipient}")
-        except ValueError:
+        except ValueError as e:
             print("Invalid input. Use format: addtx <recipient> <amount>")
+            print(e)
 
     def _notify_peer_to_add_us(self, address, port):
         """Notify the peer to add this node as a peer"""
@@ -637,7 +652,7 @@ class NodeCLI(cmd.Cmd):
                     response = json.loads(response.decode())
                     self.response = response
 
-            print(f"Successfully notified peer {address}:{port} to add us as a peer.")
+            # print(f"Successfully notified peer {address}:{port} to add us as a peer.")
             return True
 
         except Exception as e:
@@ -681,7 +696,7 @@ class NodeCLI(cmd.Cmd):
                 if response and response['is_validator']:
                     self.node.add_node((address, port))
 
-                print(f"Peer added: {address}:{port}")
+                # print(f"Peer added: {address}:{port}")
             else:
                 # print(f"Failed to add peer: {address}:{port}")
                 pass
@@ -697,6 +712,19 @@ class NodeCLI(cmd.Cmd):
                 print(f"  - {peer[0]}:{peer[1]}")
         else:
             print("This node has no connected peers.")
+    
+    def do_resources(self, arg):
+        cpu_usage = psutil.cpu_percent()
+        per_core_usage = sum(psutil.cpu_percent(percpu=True))/psutil.cpu_count()
+        physical_cores = psutil.cpu_count(logical=False)
+        logical_cpus = psutil.cpu_count(logical=True)
+        res = {
+            'cpu_usage': cpu_usage,
+            'per_core_usage': per_core_usage,
+            'physical_cores': physical_cores,
+            'logical_cpus': logical_cpus
+        }
+        return res
 
     def do_exit(self, arg):
         """Exit the CLI"""

@@ -1,0 +1,12 @@
+TEST
+{'throughput': 0.6867615922022232, 'latency': 1.4561093854904175, 'cpu_usage': 101.1, 'memory_usage': 10.015625}
+{'throughput': 0.32944411092849485, 'latency': 3.035416226387024, 'cpu_usage': 214.3, 'memory_usage': 2.08984375}
+{'throughput': 2.4282619290808087, 'latency': 0.41181718826293945, 'cpu_usage': 65.5, 'memory_usage': 3.42578125}
+{'throughput': 0.5493990816557441, 'latency': 1.8201704978942872, 'cpu_usage': 121.5, 'memory_usage': -0.79296875}
+
+TEST
+{'throughput': 0.3190993160713578, 'latency': 3.1338205681906808, 'cpu_usage': 235.3, 'memory_usage': 3.8203125}
+{'throughput': 0.10152622194077153, 'latency': 9.849672142664591, 'cpu_usage': 280.4, 'memory_usage': 9.1328125}
+{'throughput': 0.8076755133218811, 'latency': 1.2381209823820325, 'cpu_usage': 154.4, 'memory_usage': 5.74609375}
+{'throughput': 0.19758238876712192, 'latency': 5.061179825994704, 'cpu_usage': 114.8, 'memory_usage': 0.59375}
+

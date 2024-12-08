@@ -251,6 +251,7 @@ class Node:
         self.peers.add((address, port))
 
     def POS(self, message):
+        # print(f"{self.port} Leader {message['leader']}")
         if message['leader'] == self.port:
             # print("Mining new block...")
             latest_block = self.blockchain.get_latest_block()
@@ -288,7 +289,7 @@ class Node:
         if cst == 1:
             aist = len(self.blockchain.validators)
 
-        CS = (alpha * aist * (1 - cst/tst) * np.log(1 + 1/(lit + 0.000001))) / (beta * (cbm + 1))
+        CS = (alpha * aist * (1 - cst/tst) * np.log(1 + 1/(lit + 0.000001))) / (beta * (cbm + 1)**2)
         # CS = (alpha * params['aist'] * (1 - params['cst']/params['tst']) * np.log(1 + 1/params['lit'])) / (beta * (params['cbm'] + 1))
         return CS
     
@@ -299,29 +300,32 @@ class Node:
         if self.parameters == None:
             self.parameters = {port : {'ss': 0, 'lit': 0, 'aist': 0, 'cst': 0, 'tst': 0, 'cbm': 0} for port in self.blockchain.validators}
         
-        if len(self.blockchain.chain) <= 6:
+        # print(f"{self.port} Blockchain length: {len(self.blockchain.chain)}")
+        if len(self.blockchain.chain) <= 3:
             self.POS(message)
             return
         
         # print("\n\n")
         # print("Mining new block using AASC...")
-        block_pos = len(self.blockchain.chain) - 6
+        block_pos = len(self.blockchain.chain) - 3
         mined_by = self.blockchain.chain[block_pos].mined_by
         self.parameters[mined_by]['aist'] = (self.parameters[mined_by]['aist'] * self.parameters[mined_by]['cst'] + block_pos + 1 - self.parameters[mined_by]['lit']) / (self.parameters[mined_by]['cst'] + 1)
         self.parameters[mined_by]['cst'] += 1
         self.parameters[mined_by]['tst'] = block_pos + 1 - self.active
         self.parameters[mined_by]['lit'] = block_pos + 1
-        self.parameters[mined_by]['cbm'] = 1
+        self.parameters[mined_by]['cbm'] += 1
         for port in self.blockchain.validators:
             if port != mined_by:
                 self.parameters[port]['cbm'] = 0
-                # self.parameters[port]['tst'] = block_pos + 1 - self.active
+                self.parameters[port]['tst'] = block_pos + 1 - self.active
 
         # print(f"Parameters: {self.parameters}")
         CS = [self.score(self.parameters[val]) for val in self.blockchain.validators]
+        # print(f"{self.port} Consensus Scores: {CS}")
 
         block_producer_index = np.argmax(CS)
         block_producer = list(self.blockchain.validators)[block_producer_index]
+        # print(f"{self.port} Block producer: {block_producer}")
 
         if self.port == block_producer:
             latest_block = self.blockchain.get_latest_block()
@@ -347,6 +351,20 @@ class NodeCLI(cmd.Cmd):
         self.node = node
         self.response = None
 
+    def do_params(self, arg):
+        """View the current parameters"""
+        print(f"Parameters: {self.node.parameters}")
+
+    def do_scores(self, arg):
+        """View the current scores"""
+        params = self.node.parameters
+        scores = {port: self.node.score(params[port]) for port in params}
+        print(f"Scores: {scores}")
+
+    def do_count(self, arg):
+        """Count the number of blocks in the blockchain"""
+        return len(self.node.blockchain.chain)
+
     def do_sval(self, arg):
         """Store the validators"""
         if len(self.node.messages_id) != 0:
@@ -369,11 +387,7 @@ class NodeCLI(cmd.Cmd):
     
     def do_val(self, arg):
         """View the validators"""
-        # print(f"Validators: {self.node.blockchain.validators}")
-    
-    def do_train(self, arg):
-        """Train the PoEM model"""
-        poem_model.train()
+        print(f"Validators: {self.node.blockchain.validators}")
         
     def do_syncmodel(self, arg):
         """Synchronize the PoEM model with peers"""
@@ -446,6 +460,18 @@ class NodeCLI(cmd.Cmd):
         except Exception as e:
             # print(f"Error notifying peer {address}:{port}: {e}")
             return False
+    def do_resources(self, arg):
+        cpu_usage = psutil.cpu_percent()
+        per_core_usage = sum(psutil.cpu_percent(percpu=True))/psutil.cpu_count()
+        physical_cores = psutil.cpu_count(logical=False)
+        logical_cpus = psutil.cpu_count(logical=True)
+        res = {
+            'cpu_usage': cpu_usage,
+            'per_core_usage': per_core_usage,
+            'physical_cores': physical_cores,
+            'logical_cpus': logical_cpus
+        }
+        return res
 
     def do_mine(self, arg):
         """Mine a new block"""
