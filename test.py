@@ -349,7 +349,7 @@ class Test:
 
 if __name__ == "__main__":
     test = Test(number_of_transactions=100)
-    for i in [20, 30, 40, 50, 70, 100, 150, 200, 300, 400, 500]:
+    for i in [150, 200, 300, 400, 500]:
         test.run_test(i, min(30, max(i//5, 10)))
 
     # test.run_test(20, 10)

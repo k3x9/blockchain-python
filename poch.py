@@ -54,7 +54,7 @@ class Blockchain:
         self.c_val = self.calculate_hash(str(self.chain[-1].index) + self.chain[-1].hash + str(len(self.pending_transactions)))
 
     def update_target(self, nbr_cand):
-        self.target = self.target/math.log10(nbr_cand)
+        self.target = self.target/math.log10(nbr_cand + 1)
 
 class Node:
     def __init__(self, address, port):
@@ -62,7 +62,7 @@ class Node:
         self.port = port
         self.blockchain = Blockchain()
         self.peers = set()
-        self.id = self.calculate_hash(address + str(port))
+        self.id = port
         self.candidacies = []
         self.new_block_received = False
         self.failed_consensus_received = False
@@ -118,6 +118,8 @@ class Node:
                 if message['type'] == 'new_block':
                     self.blockchain.pending_transactions = []
                     self.probabilities = set()
+                    self.blockchain.c_val = message['cval']
+                    self.blockchain.target = message['target']
                     # print(message['id'], self.messages_id)
                     if message['id'] in self.messages_id:
                         return
@@ -218,14 +220,14 @@ class Node:
 
     def poch_consensus(self):
         # print("Starting PoCh consensus...")
-        tv = int(self.calculate_hash(self.blockchain.c_val + self.id), 16)
+        tv = int(self.calculate_hash(int(self.blockchain.c_val, 16) + self.id), 16)
         # print(f"{self.port} -> {tv} <= {self.blockchain.target}")
         # print(tv <= self.blockchain.target)
         while True:
             # Wait for p1 time and collect candidacies
             # time.sleep(2)  # p1 waiting time
             p_candidacies = self.blockchain.candidancies.copy()
-            candidacies = [v for k, v in p_candidacies.items() if int(self.calculate_hash(self.blockchain.c_val + v), 16) <= self.blockchain.target]
+            candidacies = [v for k, v in p_candidacies.items() if int(self.calculate_hash(int(self.blockchain.c_val, 16) + v), 16) <= self.blockchain.target]
             
             if len(candidacies) > 15:
                 # print("Too many candidacies. Restarting consensus...")
@@ -242,9 +244,9 @@ class Node:
             if 6 <= len(candidacies) <= 15:
                 result = 0
                 d = 1
-                sorted_candidates = sorted(candidacies, key=lambda x: int(x, 16))
+                sorted_candidates = sorted(candidacies)
                 while result == 0:
-                    result = (self.blockchain.chain[-1].index + sum(int(cand[1], 16)**d for cand in sorted_candidates)) % (len(candidacies) + 1)
+                    result = (self.blockchain.chain[-1].index + sum(cand**d for cand in sorted_candidates)) % (len(candidacies) + 1)
                     d += 1
                 
                 if self.id == sorted_candidates[result - 1]:
@@ -258,9 +260,13 @@ class Node:
                         max_msg_id = max(self.messages_id)
                     else:
                         max_msg_id = 0
+                    self.blockchain.update_c_val()
+                    self.blockchain.update_target(len(candidacies))
                     self.broadcast({
                         'type': 'new_block',
                         'data': block.to_dict(),
+                        'cval': self.blockchain.c_val,
+                        'target': self.blockchain.target,
                         'id': max_msg_id + 1
                     })
                     # print("New block broadcasted.")

@@ -10,3 +10,29 @@ TEST
 {'throughput': 0.8076755133218811, 'latency': 1.2381209823820325, 'cpu_usage': 154.4, 'memory_usage': 5.74609375}
 {'throughput': 0.19758238876712192, 'latency': 5.061179825994704, 'cpu_usage': 114.8, 'memory_usage': 0.59375}
 
+TEST
+{'throughput': 0.21231841485266706, 'latency': 4.709907054901123, 'cpu_usage': 261.6, 'memory_usage': -0.11328125}
+{'throughput': 0.06934653965042047, 'latency': 14.420330200195313, 'cpu_usage': 299.1, 'memory_usage': 8.171875}
+{'throughput': 0.5600780112626382, 'latency': 1.7854655599594116, 'cpu_usage': 171.8, 'memory_usage': 9.92578125}
+{'throughput': 0.15055009638319752, 'latency': 6.642307271957398, 'cpu_usage': 139.2, 'memory_usage': 0.265625}
+
+TEST
+{'throughput': 0.17666528517041744, 'latency': 5.660421621799469, 'cpu_usage': 286.6, 'memory_usage': 3.48828125}
+{'throughput': 0.05265352566217267, 'latency': 18.99208053827286, 'cpu_usage': 267.8, 'memory_usage': 9.40234375}
+{'throughput': 0.40222288274225926, 'latency': 2.486183762550354, 'cpu_usage': 199.5, 'memory_usage': 5.25390625}
+{'throughput': 0.11264429350489952, 'latency': 8.877502524852753, 'cpu_usage': 143.8, 'memory_usage': 2.6328125}
+
+TEST
+{'throughput': 0.11386316200008767, 'latency': 8.782471718106951, 'cpu_usage': 242.7, 'memory_usage': 18.78515625}
+TEST
+{'throughput': 0.12514155479126507, 'latency': 7.990950741086688, 'cpu_usage': 302.8, 'memory_usage': 19.1796875}
+{'throughput': 0.03931263571167145, 'latency': 25.437114095687868, 'cpu_usage': 246.2, 'memory_usage': 12.71875}
+{'throughput': 0.2519766996719803, 'latency': 3.968620913369315, 'cpu_usage': 245.5, 'memory_usage': 9.390625}
+{'throughput': 0.08252028898401641, 'latency': 12.118231919833592, 'cpu_usage': 152.6, 'memory_usage': 13.0546875}
+
+TEST
+{'throughput': 0.08277247677763475, 'latency': 12.081310586929321, 'cpu_usage': 327.7, 'memory_usage': 12.65625}
+{'throughput': 0.020937017436726442, 'latency': 47.76229484558105, 'cpu_usage': 230.6, 'memory_usage': 13.09375}
+{'throughput': 0.1172521965910877, 'latency': 8.52862487077713, 'cpu_usage': 337.4, 'memory_usage': 4.28515625}
+{'throughput': 0.055140092292607835, 'latency': 18.13562434196472, 'cpu_usage': 184.3, 'memory_usage': 8.203125}
+
