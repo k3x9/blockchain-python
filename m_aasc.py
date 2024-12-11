@@ -479,10 +479,7 @@ class NodeCLI(cmd.Cmd):
         try:
             recipient, amount = arg.split()
             amount = int(amount)
-            if len(self.node.blockchain.chain) <= 3:
-                leader = self.node.select_leader()
-            else: 
-                leader = None
+            leader = random.choice(list(self.node.blockchain.validators))
             # self.node.blockchain.add_transaction(self.node.address, recipient, amount)
             if len(self.node.messages_id) != 0:
                 max_msg_id = max(self.node.messages_id)
@@ -507,7 +504,7 @@ class NodeCLI(cmd.Cmd):
             # print(self.node.blockchain.stakes)
 
             max_msg_id = max(self.node.messages_id)
-            self.node.broadcast({
+            message = {
                 'type': 'new_transaction',
                 'data': {
                     'sender': str(self.node.address) + str(self.node.port),
@@ -516,7 +513,13 @@ class NodeCLI(cmd.Cmd):
                 },
                 'leader': leader,
                 'id': max_msg_id + 1
-            })
+            }
+            self.node.broadcast(message)
+
+            self.node.blockchain.add_transaction(**message['data'])
+            if self.node.is_validator:
+                self.node.mine(message)
+            self.node.blockchain.pending_transactions = []
             # print(f"Transaction added: {str(self.node.address) + str(self.node.port)} sends {amount} coins to {recipient}")
         except ValueError:
             # print("Invalid input. Use format: addtx <recipient> <amount>")

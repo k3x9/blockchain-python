@@ -214,8 +214,8 @@ class Test:
         print("DONE")
 
     def mAASC_test(self, nodes, validators, edges):
-        active_nodes = {node : self.run_node(node, algo = aasc) for node in nodes}
-        print("AASC")
+        print("mAASC")
+        active_nodes = {node : self.run_node(node, node in validators, algo = m_aasc) for node in nodes}
         print("Attempting to connect nodes")
         k = 1
         total_edges = len(edges)
@@ -224,8 +224,8 @@ class Test:
             print(f"{k}/{total_edges}", end='\r')
             k += 1
             time.sleep(0.25)
-
-        time.sleep(1)
+        
+        time.sleep(2)
         print("Collecting validators")
         active_nodes[nodes[0]][1].do_sval("")
         time.sleep(2)
@@ -241,9 +241,9 @@ class Test:
                 active_nodes[node][1].do_addtx(f"{recipient} {amount}")
                 time.sleep(1)
                 total_transactions += 1
-                print(f"Transaction {total_transactions} completed", end = '\r')
-
+                print(f"Transaction {total_transactions} completed with {total_transactions/(time.time() - start_time - total_transactions)}", end = '\r')
         end_time = time.time()
+
         total_time = end_time - start_time - total_transactions
         throughput = total_transactions / total_time
         latency = total_time / total_transactions

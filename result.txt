@@ -135,3 +135,73 @@ AASC            0.117252     8.52862        337.4         4.28516
 
 
 
+Number of Nodes: 20, Number of Miners: 10, Number of transaction: 100
+Test Results for 20 nodes and 10 miners
+--------------------------------------------------
+Algorithm      Throughput    Latency    CPU Usage    Memory Usage
+-----------  ------------  ---------  -----------  --------------
+mAASC            0.650865    1.81533        183.3         8.54688
+--------------------------------------------------
+
+
+
+Number of Nodes: 20, Number of Miners: 10, Number of transaction: 100
+Test Results for 20 nodes and 10 miners
+--------------------------------------------------
+Algorithm      Throughput    Latency    CPU Usage    Memory Usage
+-----------  ------------  ---------  -----------  --------------
+mAASC             0.66094    1.78272        203.7         7.98828
+--------------------------------------------------
+
+
+
+Number of Nodes: 30, Number of Miners: 10, Number of transaction: 100
+Test Results for 30 nodes and 10 miners
+--------------------------------------------------
+Algorithm      Throughput    Latency    CPU Usage    Memory Usage
+-----------  ------------  ---------  -----------  --------------
+mAASC            0.286228    5.36976        261.1         12.1875
+--------------------------------------------------
+
+
+
+Number of Nodes: 40, Number of Miners: 10, Number of transaction: 100
+Test Results for 40 nodes and 10 miners
+--------------------------------------------------
+Algorithm      Throughput    Latency    CPU Usage    Memory Usage
+-----------  ------------  ---------  -----------  --------------
+mAASC            0.212307    8.90416        261.1         1.48047
+--------------------------------------------------
+
+
+
+Number of Nodes: 50, Number of Miners: 10, Number of transaction: 100
+Test Results for 50 nodes and 10 miners
+--------------------------------------------------
+Algorithm      Throughput    Latency    CPU Usage    Memory Usage
+-----------  ------------  ---------  -----------  --------------
+mAASC            0.190924    10.9982        268.6         5.07031
+--------------------------------------------------
+
+
+
+Number of Nodes: 70, Number of Miners: 14, Number of transaction: 100
+Test Results for 70 nodes and 14 miners
+--------------------------------------------------
+Algorithm      Throughput    Latency    CPU Usage    Memory Usage
+-----------  ------------  ---------  -----------  --------------
+mAASC            0.127243    10.9982        268.6         5.07031
+--------------------------------------------------
+
+
+
+Number of Nodes: 100, Number of Miners: 20, Number of transaction: 100
+Test Results for 100 nodes and 20 miners
+--------------------------------------------------
+Algorithm      Throughput    Latency    CPU Usage    Memory Usage
+-----------  ------------  ---------  -----------  --------------
+mAASC           0.0779802    55.6167        142.6         25.0195
+--------------------------------------------------
+
+
+
